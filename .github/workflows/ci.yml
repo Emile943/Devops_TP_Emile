@@ -1,0 +1,62 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.11"
+      - run: flake8 . --max-line-length=120
+      - run: yamllint .
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 2s
+          --health-retries 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pytest test_app.py --junitxml=rapport.xml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rapport-${{ matrix.python-version }}
+          path: rapport.xml
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build .
+
+  ci-ok:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: [lint, test, build]
+    steps:
+      - run: echo "ok"

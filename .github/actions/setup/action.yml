@@ -1,0 +1,13 @@
+name: "Setup"
+inputs:
+  python-version:
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: 'pip'
+    - shell: bash
+      run: pip install -r requirements.txt
