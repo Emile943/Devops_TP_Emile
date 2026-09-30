@@ -28,6 +28,7 @@ def health():
 def status():
     return jsonify(service="projet-devops-groupe-demo", version="1.0"), 200
 
+
 r = redis.Redis(
     host=os.getenv("REDIS_HOST", "localhost"),
     port=6379,

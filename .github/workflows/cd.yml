@@ -31,7 +31,8 @@ jobs:
       - name: Build et push
         run: |
           SHA=${GITHUB_SHA::7}
-          DEPOT=ghcr.io/${{ github.repository }}
+          REPO_RAW="ghcr.io/${{ github.repository }}"
+          DEPOT=$(echo "$REPO_RAW" | tr '[:upper:]' '[:lower:]')
           docker build -t $DEPOT:latest -t $DEPOT:$SHA -t $DEPOT:1.0.0 .
           docker push $DEPOT:latest
           docker push $DEPOT:$SHA
@@ -39,7 +40,8 @@ jobs:
 
       - name: Deploiement et verification
         run: |
-          DEPOT=ghcr.io/${{ github.repository }}
+          REPO_RAW="ghcr.io/${{ github.repository }}"
+          DEPOT=$(echo "$REPO_RAW" | tr '[:upper:]' '[:lower:]')
           docker run -d --name test-redis redis:alpine
           docker run -d --name web -p 8000:8000 --link test-redis:redis -e REDIS_HOST=redis $DEPOT:${GITHUB_SHA::7}
 
